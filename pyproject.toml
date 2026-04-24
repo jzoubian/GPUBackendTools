@@ -100,6 +100,7 @@ sdist.include = [
   "src/gpubackendtools/git_version.py",                 #@SKIP_PLUGIN@
   "#src/gpubackendtools_backend_cuda11x/git_version.py",
   "#src/gpubackendtools_backend_cuda12x/git_version.py",
+  "#src/gpubackendtools_backend_cuda13x/git_version.py",
   "tests/",
   #"src/gpubackendtools/cutils/CubicSpline.cu",
   #"src/gpubackendtools/cutils/Interpolate.cu",
