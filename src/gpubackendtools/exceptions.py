@@ -3,7 +3,15 @@
 try:
     from exceptiongroup import ExceptionGroup
 except (ImportError, ModuleNotFoundError):
-    ExceptionGroup = ExceptionGroup
+    # For Python < 3.11, provide a simple ExceptionGroup fallback
+    class ExceptionGroup(Exception):
+        def __init__(self, message, exceptions):
+            self.message = message
+            self.exceptions = exceptions
+            super().__init__(message)
+        
+        def __str__(self):
+            return f"{self.message} ({len(self.exceptions)} sub-exceptions)"
 
 
 class GPUBACKENDTOOLSException(Exception):

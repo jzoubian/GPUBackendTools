@@ -645,6 +645,100 @@ class Cuda13xBackend(_CudaBackend, abc.ABC):
         )
 
 
+
+
+# Concrete backend implementations for built-in functionality
+class DefaultCpuBackend(CpuBackend):
+    """Default CPU backend implementation"""
+    backend_name = "cpu"
+    
+    def __init__(self, *args, **kwargs):
+        methods = self.check_numpy_backend()
+        Feature = Backend.Feature
+        super(Backend, self).__init__(
+            name="cpu", 
+            methods=methods, 
+            features=Feature.NUMPY
+        )
+    
+    @staticmethod
+    def check_numpy_backend():
+        """Load numpy as the CPU backend"""
+        try:
+            import numpy as np
+            from dataclasses import dataclass
+            
+            @dataclass  
+            class BasicBackendMethods(BackendMethods):
+                pass
+                
+            return BasicBackendMethods(xp=np)
+        except ImportError as e:
+            raise MissingDependencies(
+                "CPU backend requires numpy",
+                pip_deps=["numpy"],
+                conda_deps=["numpy"]
+            ) from e
+
+class DefaultCuda11xBackend(Cuda11xBackend):
+    """Default CUDA 11.x backend implementation"""
+    backend_name = "cuda11x"
+    
+class DefaultCuda12xBackend(Cuda12xBackend):  
+    """Default CUDA 12.x backend implementation"""
+    backend_name = "cuda12x"
+
+class DefaultCuda13xBackend(Cuda13xBackend):
+    """Default CUDA 13.x backend implementation""" 
+    backend_name = "cuda13x"
+
+
+
+# Concrete backend implementations for built-in functionality
+class DefaultCpuBackend(CpuBackend):
+    """Default CPU backend implementation"""
+    backend_name = "cpu"
+    
+    def __init__(self, *args, **kwargs):
+        methods = self.check_numpy_backend()
+        Feature = Backend.Feature
+        super(Backend, self).__init__(
+            name="cpu", 
+            methods=methods, 
+            features=Feature.NUMPY
+        )
+    
+    @staticmethod
+    def check_numpy_backend():
+        """Load numpy as the CPU backend"""
+        try:
+            import numpy as np
+            from dataclasses import dataclass
+            
+            @dataclass  
+            class BasicBackendMethods(BackendMethods):
+                pass
+                
+            return BasicBackendMethods(xp=np)
+        except ImportError as e:
+            raise MissingDependencies(
+                "CPU backend requires numpy",
+                pip_deps=["numpy"],
+                conda_deps=["numpy"]
+            ) from e
+
+class DefaultCuda11xBackend(Cuda11xBackend):
+    """Default CUDA 11.x backend implementation"""
+    backend_name = "cuda11x"
+    
+class DefaultCuda12xBackend(Cuda12xBackend):  
+    """Default CUDA 12.x backend implementation"""
+    backend_name = "cuda12x"
+
+class DefaultCuda13xBackend(Cuda13xBackend):
+    """Default CUDA 13.x backend implementation""" 
+    backend_name = "cuda13x"
+
 class BackendStatus:
     """Base class for backend statuses in the backends manager"""
 
@@ -694,6 +788,30 @@ class BackendsManager:
         enabled_backends: optional list of backend names which must be loaded, others will be disabled
         """
         self._registry = {}
+
+        # Register built-in backends if _known_backends is empty
+        if not self._known_backends:
+            self._known_backends = {
+                "cpu": DefaultCpuBackend,
+                "cuda11x": DefaultCuda11xBackend, 
+                "cuda12x": DefaultCuda12xBackend,
+                "cuda13x": DefaultCuda13xBackend,
+            }
+        
+        # Initialize the backend registry after setting known backends
+        self._initialize_backend(enabled_backends)
+
+        # Register built-in backends if _known_backends is empty
+        if not self._known_backends:
+            self._known_backends = {
+                "cpu": DefaultCpuBackend,
+                "cuda11x": DefaultCuda11xBackend, 
+                "cuda12x": DefaultCuda12xBackend,
+                "cuda13x": DefaultCuda13xBackend,
+            }
+        
+        # Initialize the backend registry after setting known backends
+        self._initialize_backend(enabled_backends)
 
     def _initialize_backend(
         self, enabled_backends: typing.Optional[typing.Sequence[str]] = None
@@ -830,9 +948,18 @@ class BackendsManager:
         self._known_backends[name] = backend
 
     def add_backends(self, backends: typing.Dict[str, Backend]):
+                # Ensure _known_backends is initialized
+        if not hasattr(self, '_known_backends') or self._known_backends is None:
+            self._known_backends = {}
+            
+                # Ensure _known_backends is initialized
+        if not hasattr(self, '_known_backends') or self._known_backends is None:
+            self._known_backends = {}
+            
         for key, value in backends.items():
-            self.add_backend(key, value)
-        # TODO: configuration added here?
+            self._known_backends[key] = value
+        
+        # Re-initialize backend registry with new backends
         self._initialize_backend()
 
 
